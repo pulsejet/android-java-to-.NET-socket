@@ -3,3 +3,4 @@ Client/gen
 Client/libs
 Server/TCPServer/bin
 Server/TCPServer/obj
+Server/.vs
