@@ -187,24 +187,24 @@ public class MainActivity extends Activity {
         /* Adjust buffer size here */
         byte[] buffer = new byte[1024];
 
-    try{
-        /* Open a connection */
-        Socket socket = new Socket(InetAddress.getByName(IP), settings.getInt("Port", DEFAULT_PORT));
+        try{
+            /* Open a connection */
+            Socket socket = new Socket(InetAddress.getByName(IP), settings.getInt("Port", DEFAULT_PORT));
+    
+            /* Write everything */
+            OutputStream output = socket.getOutputStream();
+            int count;
+            while ((count = rdr.read(buffer,0,buffer.length)) > 0) {
+                output.write(buffer, 0, count);
+            }
 
-        /* Write everything */
-        OutputStream output = socket.getOutputStream();
-        int count;
-        while ((count = rdr.read(buffer,0,buffer.length)) > 0) {
-           output.write(buffer, 0, count);
+            /* Flush the output to commit */
+            output.flush();
         }
-        
-        /* Flush the output to commit */
-        output.flush();
-    }
-    catch (Exception e){
-        Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
-        Log.e("MYAPP", "exception", e);
-    }
+        catch (Exception e){
+            Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
+            Log.e("MYAPP", "exception", e);
+        }
     }
     
     /* Scales down a bitmap keeping aspect ratio to have one dimension as indicated */
