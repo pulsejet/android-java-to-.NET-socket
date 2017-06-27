@@ -3,4 +3,6 @@ Client/gen
 Client/libs
 Server/TCPServer/bin
 Server/TCPServer/obj
+Server/TCPServerVB/bin
+Server/TCPServerVB/obj
 Server/.vs

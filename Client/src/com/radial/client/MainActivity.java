@@ -31,7 +31,7 @@ public class MainActivity extends Activity {
     private EditText QualityEditText;
     private EditText DimensionEditText;
     private EditText PortEditText;
-	private CheckBox PreserveCheckbox;
+    private CheckBox PreserveCheckbox;
     
     private Uri mImageUri;
 
@@ -47,7 +47,7 @@ public class MainActivity extends Activity {
         QualityEditText = (EditText)findViewById(R.id.txtquality);
         DimensionEditText = (EditText)findViewById(R.id.txtdim);
         PortEditText = (EditText)findViewById(R.id.txtport);
-		PreserveCheckbox = (CheckBox)findViewById(R.id.checkbox_preserve);
+        PreserveCheckbox = (CheckBox)findViewById(R.id.checkbox_preserve);
 
         /* Load Preferences */
         final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);     
@@ -103,7 +103,7 @@ public class MainActivity extends Activity {
                     editor.putInt("Dimension", Dim);
                     editor.putInt("Port", Port);
                     editor.putString("IP", IPEditText.getText().toString());
-					editor.putBoolean("PreserveImage", PreserveCheckbox.isChecked());
+                    editor.putBoolean("PreserveImage", PreserveCheckbox.isChecked());
                 }
                 catch(Exception e){ 
                     Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
@@ -138,8 +138,8 @@ public class MainActivity extends Activity {
         try
         {
             bitmap = android.provider.MediaStore.Images.Media.getBitmap(cr, mImageUri);
-			File fdelete = new File(mImageUri.getPath()); 
-			if (delete && fdelete.exists()) fdelete.delete();
+            File fdelete = new File(mImageUri.getPath()); 
+            if (delete && fdelete.exists()) fdelete.delete();
             return bitmap;
         }
         catch (Exception e)
@@ -199,12 +199,12 @@ public class MainActivity extends Activity {
     
             /* Write everything */
             OutputStream output = socket.getOutputStream();
-			
-			String string = "HEADER\n" + Integer.toString(stream.size()) + "\n";
-			System.arraycopy(string.getBytes("US-ASCII"), 0, buffer, 0, string.length());
-			
-			output.write(buffer);
-			
+            
+            String string = "HEADER\n" + Integer.toString(stream.size()) + "\n";
+            System.arraycopy(string.getBytes("US-ASCII"), 0, buffer, 0, string.length());
+            
+            output.write(buffer);
+            
             int count;
             while ((count = rdr.read(buffer,0,buffer.length)) > 0) {
                 output.write(buffer, 0, count);

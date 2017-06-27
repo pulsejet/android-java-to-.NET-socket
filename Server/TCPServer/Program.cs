@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -53,6 +52,7 @@ namespace TCPServer
                 int filesize = 0;
                 try
                 {
+                    /* Receive the header, terminate if not found */
                     if ((bytesRead = sock.Receive(receiveBytes)) > 0)
                     {
                         string[] headers = System.Text.Encoding.ASCII.GetString(receiveBytes).Split('\n');
@@ -68,7 +68,7 @@ namespace TCPServer
                     while ((totalBytesRead != filesize) && (bytesRead = sock.Receive(receiveBytes,receiveBytes.Length, SocketFlags.None )) > 0)
                     {
                         /* Delete existing file to be safe */
-                        if (objWriter is null)
+                        if (objWriter == null)
                         {
                             if (File.Exists(FILE_NAME)) File.Delete(FILE_NAME);
                             objWriter = File.OpenWrite(FILE_NAME);
@@ -77,6 +77,8 @@ namespace TCPServer
                         objWriter.Write(receiveBytes, 0, bytesRead);
 
                         totalBytesRead += bytesRead;
+
+                        /* Reduce buffer size if bytes left are less than it */
                         if(filesize - totalBytesRead < receiveBytes.Length)
                         {
                             receiveBytes = new byte[filesize - totalBytesRead];
@@ -90,7 +92,7 @@ namespace TCPServer
 
                 /* Close everything */
                 sock.Close();
-                if (!(objWriter is null))
+                if (!(objWriter == null))
                 {
                     objWriter.Close();
                     objWriter = null;
@@ -99,7 +101,7 @@ namespace TCPServer
             }
             /* Clean up and open the received file */
             tcpListener.Stop();
-            //Process.Start(FILE_NAME);
+            System.Diagnostics.Process.Start(FILE_NAME);
             Console.ReadKey();
         }
     }

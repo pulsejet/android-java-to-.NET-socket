@@ -1,6 +1,6 @@
-# android-java-to-cs-socket
+# android-java-to-dotNET-socket
 
-Simple client in Java that transfers a single file over a wireless network to an IP:Port running over a simple socket to the server which uses C#.
+Simple client in Java that transfers a single file over a wireless network to an IP:Port running over a simple socket to the server which uses C# or VisualBasic.NET.
 The client currently clicks a photo using the camera intent.
 
 ## Notes:
