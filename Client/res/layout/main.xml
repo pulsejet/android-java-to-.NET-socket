@@ -14,6 +14,7 @@
 	<EditText android:id="@+id/txtdim" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="number"/>
 	<TextView android:id="@+id/quality" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="Quality (0 - 100)" />
 	<EditText android:id="@+id/txtquality" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="number"/>
+	<CheckBox android:id="@+id/checkbox_preserve" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Preserve Original Image"/>
 	<Button android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Save"></Button>
 	
 </LinearLayout>

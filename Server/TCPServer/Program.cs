@@ -50,9 +50,22 @@ namespace TCPServer
 
                 /* Sleep for another 100ms to give the client time to respond */
                 Thread.Sleep(100);
+                int filesize = 0;
                 try
                 {
-                    while ((bytesRead = sock.Receive(receiveBytes)) > 0)
+                    if ((bytesRead = sock.Receive(receiveBytes)) > 0)
+                    {
+                        string[] headers = System.Text.Encoding.ASCII.GetString(receiveBytes).Split('\n');
+                        if (headers[0] == "HEADER")
+                        {
+                            Console.WriteLine("Receiving file of size " + headers[1] + " bytes");
+                            Int32.TryParse(headers[1], out filesize);
+                        }
+                        else throw new Exception("No header received");
+                    }
+                    else throw new Exception("No header received");
+
+                    while ((totalBytesRead != filesize) && (bytesRead = sock.Receive(receiveBytes,receiveBytes.Length, SocketFlags.None )) > 0)
                     {
                         /* Delete existing file to be safe */
                         if (objWriter is null)
@@ -60,28 +73,19 @@ namespace TCPServer
                             if (File.Exists(FILE_NAME)) File.Delete(FILE_NAME);
                             objWriter = File.OpenWrite(FILE_NAME);
                         }
-                        totalBytesRead += bytesRead;
+
                         objWriter.Write(receiveBytes, 0, bytesRead);
-                        Console.Write("Received till " + totalBytesRead.ToString()+"\r");
+
+                        totalBytesRead += bytesRead;
+                        if(filesize - totalBytesRead < receiveBytes.Length)
+                        {
+                            receiveBytes = new byte[filesize - totalBytesRead];
+                        }
                     }
                 }
                 catch (Exception e)
                 {
-                    /* Write remaining bytes after timeout */
-                    if (e is SocketException)
-                    {
-                        /* Initialize file if necessary, in case payload is less than buffer size */
-                        if (objWriter is null)
-                        {
-                            if (File.Exists(FILE_NAME)) File.Delete(FILE_NAME);
-                            objWriter = File.OpenWrite(FILE_NAME);
-                        }
-                        objWriter.Write(receiveBytes, 0, bytesRead);
-                        totalBytesRead += bytesRead;
-                        Console.WriteLine("Received till " + totalBytesRead.ToString());
-                        Console.WriteLine("COMPLETED");
-                    }
-                    else Console.WriteLine(e.GetType().ToString());
+                    Console.WriteLine(e.Message);
                 }
 
                 /* Close everything */
@@ -95,7 +99,7 @@ namespace TCPServer
             }
             /* Clean up and open the received file */
             tcpListener.Stop();
-            Process.Start(FILE_NAME);
+            //Process.Start(FILE_NAME);
             Console.ReadKey();
         }
     }

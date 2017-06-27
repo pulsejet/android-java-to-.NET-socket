@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
     private EditText QualityEditText;
     private EditText DimensionEditText;
     private EditText PortEditText;
+	private CheckBox PreserveCheckbox;
     
     private Uri mImageUri;
 
@@ -46,6 +47,7 @@ public class MainActivity extends Activity {
         QualityEditText = (EditText)findViewById(R.id.txtquality);
         DimensionEditText = (EditText)findViewById(R.id.txtdim);
         PortEditText = (EditText)findViewById(R.id.txtport);
+		PreserveCheckbox = (CheckBox)findViewById(R.id.checkbox_preserve);
 
         /* Load Preferences */
         final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);     
@@ -53,6 +55,7 @@ public class MainActivity extends Activity {
         QualityEditText.setText(Integer.toString(settings.getInt("Quality", DEFAULT_QUALITY)));
         DimensionEditText.setText(Integer.toString(settings.getInt("Dimension", DEFAULT_DIM)));
         PortEditText.setText(Integer.toString(settings.getInt("Port", DEFAULT_PORT)));
+        PreserveCheckbox.setChecked(settings.getBoolean("PreserveImage", false));
 
         photoButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -100,6 +103,7 @@ public class MainActivity extends Activity {
                     editor.putInt("Dimension", Dim);
                     editor.putInt("Port", Port);
                     editor.putString("IP", IPEditText.getText().toString());
+					editor.putBoolean("PreserveImage", PreserveCheckbox.isChecked());
                 }
                 catch(Exception e){ 
                     Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
@@ -117,7 +121,7 @@ public class MainActivity extends Activity {
     public File createTemporaryFile(String part, String ext) throws Exception
     {
         File tempDir= Environment.getExternalStorageDirectory();
-        tempDir=new File(tempDir.getAbsolutePath()+"/.temp/");
+        tempDir=new File(tempDir.getAbsolutePath()+"/TCPClient/");
         if(!tempDir.exists())
         {
             tempDir.mkdirs();
@@ -126,7 +130,7 @@ public class MainActivity extends Activity {
     }
     
     /* Get the bitmap of the image */
-    public Bitmap grabImage()
+    public Bitmap grabImage(boolean delete)
     {
         this.getContentResolver().notifyChange(mImageUri, null);
         ContentResolver cr = this.getContentResolver();
@@ -134,6 +138,8 @@ public class MainActivity extends Activity {
         try
         {
             bitmap = android.provider.MediaStore.Images.Media.getBitmap(cr, mImageUri);
+			File fdelete = new File(mImageUri.getPath()); 
+			if (delete && fdelete.exists()) fdelete.delete();
             return bitmap;
         }
         catch (Exception e)
@@ -154,7 +160,7 @@ public class MainActivity extends Activity {
             /* Scale down and send the image */
             try
             {
-                runJavaSocket(scaleDown(grabImage(), ImageDim, true));
+                runJavaSocket(scaleDown(grabImage(!settings.getBoolean("PreserveImage", false)), ImageDim, true));
             }
             catch (Exception e)
             {
@@ -193,6 +199,12 @@ public class MainActivity extends Activity {
     
             /* Write everything */
             OutputStream output = socket.getOutputStream();
+			
+			String string = "HEADER\n" + Integer.toString(stream.size()) + "\n";
+			System.arraycopy(string.getBytes("US-ASCII"), 0, buffer, 0, string.length());
+			
+			output.write(buffer);
+			
             int count;
             while ((count = rdr.read(buffer,0,buffer.length)) > 0) {
                 output.write(buffer, 0, count);
