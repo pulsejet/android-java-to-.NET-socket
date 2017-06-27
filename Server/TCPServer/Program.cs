@@ -1,8 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
 
 namespace TCPServer
 {
@@ -17,21 +13,21 @@ namespace TCPServer
             byte[] receiveBytes = new byte[1024];
 
             /* The IPEndPoint for the server. IP cannot be localhost */
-            IPEndPoint remoteIpEndPoint = new IPEndPoint(IPAddress.Parse("192.168.1.8"), 3800);
+            System.Net.IPEndPoint remoteIpEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse("192.168.1.8"), 3800);
 
             /* After this amount of time has passed, any connection will be terminated
              * Keep high for high latency networks and vice versa */
             const int TIMEOUT = 1000;
 
             /* Start listening for connections */
-            TcpListener tcpListener = new TcpListener(remoteIpEndPoint);
+            System.Net.Sockets.TcpListener tcpListener = new System.Net.Sockets.TcpListener(remoteIpEndPoint);
             tcpListener.Start();
 
             /* The socket that will be used for listening */
-            Socket sock = null;
+            System.Net.Sockets.Socket sock = null;
 
             /* FileStream for writing */
-            FileStream objWriter = null;
+            System.IO.FileStream objWriter = null;
 
             /* Number and total number of bytes read till the end of loop */
             int bytesRead = 0;
@@ -41,14 +37,14 @@ namespace TCPServer
             while (totalBytesRead == 0) {
 
                 /* Sleep for 100ms if no connection is being made */
-                while (!tcpListener.Pending()) Thread.Sleep(100);
+                while (!tcpListener.Pending()) System.Threading.Thread.Sleep(100);
 
                 sock = tcpListener.AcceptSocket();
                 Console.WriteLine("Accepted Connection");
                 sock.ReceiveTimeout = TIMEOUT;
 
                 /* Sleep for another 100ms to give the client time to respond */
-                Thread.Sleep(100);
+                System.Threading.Thread.Sleep(100);
                 int filesize = 0;
                 try
                 {
@@ -65,13 +61,13 @@ namespace TCPServer
                     }
                     else throw new Exception("No header received");
 
-                    while ((totalBytesRead != filesize) && (bytesRead = sock.Receive(receiveBytes,receiveBytes.Length, SocketFlags.None )) > 0)
+                    while ((totalBytesRead != filesize) && (bytesRead = sock.Receive(receiveBytes,receiveBytes.Length, System.Net.Sockets.SocketFlags.None )) > 0)
                     {
                         /* Delete existing file to be safe */
                         if (objWriter == null)
                         {
-                            if (File.Exists(FILE_NAME)) File.Delete(FILE_NAME);
-                            objWriter = File.OpenWrite(FILE_NAME);
+                            if (System.IO.File.Exists(FILE_NAME)) System.IO.File.Delete(FILE_NAME);
+                            objWriter = System.IO.File.OpenWrite(FILE_NAME);
                         }
 
                         objWriter.Write(receiveBytes, 0, bytesRead);

@@ -1,10 +1,4 @@
-﻿
-Imports System.IO
-Imports System.Net
-Imports System.Net.Sockets
-Imports System.Threading
-
-Namespace TCPServerVB
+﻿Namespace TCPServerVB
     Class ProgramVB
         Public Shared Sub Main()
             ' File name for received picture 
@@ -17,7 +11,7 @@ Namespace TCPServerVB
 
             ' The IPEndPoint for the server. IP cannot be localhost 
 
-            Dim remoteIpEndPoint As New IPEndPoint(IPAddress.Parse("192.168.1.8"), 3800)
+            Dim remoteIpEndPoint As New System.Net.IPEndPoint(System.Net.IPAddress.Parse("192.168.1.8"), 3800)
 
             ' After this amount of time has passed, any connection will be terminated
             '             * Keep high for high latency networks and vice versa 
@@ -26,16 +20,16 @@ Namespace TCPServerVB
 
             ' Start listening for connections 
 
-            Dim tcpListener As New TcpListener(remoteIpEndPoint)
+            Dim tcpListener As New System.Net.Sockets.TcpListener(remoteIpEndPoint)
             tcpListener.Start()
 
             ' The socket that will be used for listening 
 
-            Dim sock As Socket = Nothing
+            Dim sock As System.Net.Sockets.Socket = Nothing
 
             ' FileStream for writing 
 
-            Dim objWriter As FileStream = Nothing
+            Dim objWriter As IO.FileStream = Nothing
 
             ' Number and total number of bytes read till the end of loop 
 
@@ -49,7 +43,7 @@ Namespace TCPServerVB
                 ' Sleep for 100ms if no connection is being made 
 
                 While Not tcpListener.Pending()
-                    Thread.Sleep(100)
+                    System.Threading.Thread.Sleep(100)
                 End While
 
                 sock = tcpListener.AcceptSocket()
@@ -58,7 +52,7 @@ Namespace TCPServerVB
 
                 ' Sleep for another 100ms to give the client time to respond 
 
-                Thread.Sleep(100)
+                System.Threading.Thread.Sleep(100)
                 Dim filesize As Integer = 0
                 Try
                     ' Receive the header, terminate if not found 
@@ -75,14 +69,14 @@ Namespace TCPServerVB
                         Throw New Exception("No header received")
                     End If
 
-                    While (totalBytesRead <> filesize) AndAlso (Assign(bytesRead, sock.Receive(receiveBytes, receiveBytes.Length, SocketFlags.None))) > 0
+                    While (totalBytesRead <> filesize) AndAlso (Assign(bytesRead, sock.Receive(receiveBytes, receiveBytes.Length, System.Net.Sockets.SocketFlags.None))) > 0
                         ' Delete existing file to be safe 
 
                         If objWriter Is Nothing Then
-                            If File.Exists(FILE_NAME) Then
-                                File.Delete(FILE_NAME)
+                            If System.IO.File.Exists(FILE_NAME) Then
+                                System.IO.File.Delete(FILE_NAME)
                             End If
-                            objWriter = File.OpenWrite(FILE_NAME)
+                            objWriter = System.IO.File.OpenWrite(FILE_NAME)
                         End If
 
                         objWriter.Write(receiveBytes, 0, bytesRead)
