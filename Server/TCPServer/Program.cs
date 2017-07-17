@@ -102,6 +102,7 @@ namespace TCPServer
                 }
                 Console.WriteLine("Closed Connection");
             }
+
             /* Clean up and open the received file */
             tcpListener.Stop();
             System.Diagnostics.Process.Start(FILE_NAME);
@@ -110,14 +111,9 @@ namespace TCPServer
 
         static string GetLocalIPAddress()
         {
-            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
+            foreach (System.Net.IPAddress ip in System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName()).AddressList)
                 if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                {
                     return ip.ToString();
-                }
-            }
             throw new Exception("Local IP Address Not Found!");
         }
     }
