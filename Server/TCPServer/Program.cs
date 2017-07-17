@@ -9,11 +9,18 @@ namespace TCPServer
             /* File name for received picture */
             const String FILE_NAME = "Received.jpg";
 
+            /* IP Address for incoming connections */
+            string IP_ADDRESS = GetLocalIPAddress();
+
+            /* Port for incoming connections */
+            const int PORT = 3800;
+
             /* Create a buffer for receiving */
             byte[] receiveBytes = new byte[1024];
 
             /* The IPEndPoint for the server. IP cannot be localhost */
-            System.Net.IPEndPoint remoteIpEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse("192.168.1.8"), 3800);
+            System.Net.IPEndPoint remoteIpEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(IP_ADDRESS), PORT);
+            Console.WriteLine("Listening for connections on " + GetLocalIPAddress() + ":" + PORT.ToString());
 
             /* After this amount of time has passed, any connection will be terminated
              * Keep high for high latency networks and vice versa */
@@ -99,6 +106,19 @@ namespace TCPServer
             tcpListener.Stop();
             System.Diagnostics.Process.Start(FILE_NAME);
             Console.ReadKey();
+        }
+
+        static string GetLocalIPAddress()
+        {
+            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("Local IP Address Not Found!");
         }
     }
 }

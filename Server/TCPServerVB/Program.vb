@@ -2,19 +2,23 @@
     Class ProgramVB
         Public Shared Sub Main()
             ' File name for received picture 
-
             Const FILE_NAME As [String] = "Received.jpg"
 
-            ' Create a buffer for receiving 
+            ' IP Address for incoming connections 
+            Dim IP_ADDRESS As String = GetLocalIPAddress()
 
+            ' Port for incoming connections
+            Const PORT As Integer = 3800
+
+            ' Create a buffer for receiving 
             Dim receiveBytes As Byte() = New Byte(1023) {}
 
             ' The IPEndPoint for the server. IP cannot be localhost 
-
-            Dim remoteIpEndPoint As New System.Net.IPEndPoint(System.Net.IPAddress.Parse("192.168.1.8"), 3800)
+            Dim remoteIpEndPoint As New System.Net.IPEndPoint(System.Net.IPAddress.Parse(IP_ADDRESS), PORT)
+            Console.WriteLine("Listening for connections on " + GetLocalIPAddress() + ":" + CStr(PORT))
 
             ' After this amount of time has passed, any connection will be terminated
-            '             * Keep high for high latency networks and vice versa 
+            ' Keep high for high latency networks and vice versa 
 
             Const TIMEOUT As Integer = 1000
 
@@ -108,6 +112,17 @@
             System.Diagnostics.Process.Start(FILE_NAME)
             Console.ReadKey()
         End Sub
+
+        Private Shared Function GetLocalIPAddress() As String
+            Dim host As System.Net.IPHostEntry = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName())
+            For Each ip As Net.IPAddress In host.AddressList
+                If (ip.AddressFamily = System.Net.Sockets.AddressFamily.InterNetwork) Then
+                    Return ip.ToString()
+                End If
+            Next
+            Throw New Exception("Local IP Address Not Found!")
+        End Function
+
         Private Shared Function Assign(Of T)(ByRef target As T, value As T) As T
             target = value
             Return value
