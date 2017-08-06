@@ -1,20 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    >
-	
-    <Button android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Photo"></Button>
+	android:weightSum="1">
+
+	<Button
+		android:id="@+id/button1"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Photo"></Button>
 	<TextView android:id="@+id/ip_textview" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="IP Address" />
-	<EditText android:id="@+id/txtip" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="text"/>
+
+	<EditText
+		android:id="@+id/txtip"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:inputType="text|textNoSuggestions"
+		android:singleLine="true"
+		tools:inputType="phone" />
 	<TextView android:id="@+id/port" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="Port" />
-	<EditText android:id="@+id/txtport" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="number"/>
+
+	<EditText
+		android:id="@+id/txtport"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:inputType="number"
+		android:singleLine="true" />
 	<TextView android:id="@+id/maxdim" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="Maximum Image Dimension" />
-	<EditText android:id="@+id/txtdim" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="number"/>
+
+	<EditText
+		android:id="@+id/txtdim"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:inputType="number"
+		android:singleLine="true" />
 	<TextView android:id="@+id/quality" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="Quality (0 - 100)" />
-	<EditText android:id="@+id/txtquality" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="number"/>
-	<CheckBox android:id="@+id/checkbox_preserve" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Preserve Original Image"/>
-	<Button android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Save"></Button>
-	
+
+	<EditText
+		android:id="@+id/txtquality"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:inputType="number"
+		android:singleLine="true" />
+
+	<Switch
+		android:id="@+id/checkbox_preserve"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:checked="false"
+		android:splitTrack="false"
+		android:text="Preserve Original Image"
+		android:textSize="14sp"
+		android:layout_weight="0.10" />
+
+    <Button
+		android:id="@+id/button2"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Save"></Button>
+
 </LinearLayout>

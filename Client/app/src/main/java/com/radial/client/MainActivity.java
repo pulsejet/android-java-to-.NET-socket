@@ -6,17 +6,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.StrictMode;
 import android.provider.MediaStore;
-import android.support.v4.app.ActivityCompat;
+import android.support.v13.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
@@ -34,13 +34,14 @@ public class MainActivity extends Activity {
     public static final int DEFAULT_DIM = 512;
     public static final int DEFAULT_PORT = 3800;
     private static final int CAMERA_REQUEST = 1888;
+    private static final int BUFFER_SIZE = 1024;
 
     /* Declare Controls */
     private EditText IPEditText;
     private EditText QualityEditText;
     private EditText DimensionEditText;
     private EditText PortEditText;
-    private CheckBox PreserveCheckbox;
+    private Switch PreserveCheckbox;
     
     private Uri mImageUri;
 
@@ -60,7 +61,7 @@ public class MainActivity extends Activity {
         QualityEditText = (EditText)findViewById(R.id.txtquality);
         DimensionEditText = (EditText)findViewById(R.id.txtdim);
         PortEditText = (EditText)findViewById(R.id.txtport);
-        PreserveCheckbox = (CheckBox)findViewById(R.id.checkbox_preserve);
+        PreserveCheckbox = (Switch)findViewById(R.id.checkbox_preserve);
 
         /* Load Preferences */
         final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);     
@@ -70,30 +71,12 @@ public class MainActivity extends Activity {
         PortEditText.setText(Integer.toString(settings.getInt("Port", DEFAULT_PORT)));
         PreserveCheckbox.setChecked(settings.getBoolean("PreserveImage", false));
 
+        new ConnectTry().execute();
+
         photoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /* Check if server is up */
-                boolean ServerAlive = serverListening(settings.getString("IP", ""),settings.getInt("Port", DEFAULT_PORT));
-                if(ServerAlive){
-                    Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
-                    File photo;
-                    try
-                    {
-                        /* Place where to store camera taken picture */
-                        photo = createTemporaryFile("picture", ".jpg");
-                        photo.delete();
-                    }
-                    catch(Exception e)
-                    {
-                        Toast.makeText(getApplicationContext(), "Please check SD card! Image shot is impossible!", 1000).show();
-                        return;
-                    }
-                    mImageUri = Uri.fromFile(photo);
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);
-                    //Start Camera Intent
-                    startActivityForResult(intent, CAMERA_REQUEST);
-                    }           
+                new ConnectTry().execute();
             }
         });
 
@@ -124,7 +107,7 @@ public class MainActivity extends Activity {
                 }
                 /* Commit the edits! */
                 editor.commit();
-                Toast.makeText(getApplicationContext(), "Preferences Saved", 1000).show();
+                Toast.makeText(getApplicationContext(), "Preferences Saved", Toast.LENGTH_SHORT).show();
             }
         });
         
@@ -133,12 +116,8 @@ public class MainActivity extends Activity {
     /* Create temporary file to test permissions */
     public File createTemporaryFile(String part, String ext) throws Exception
     {
-        File tempDir= Environment.getExternalStorageDirectory();
-        tempDir=new File(tempDir.getAbsolutePath()+"/TCPClient/");
-        if(!tempDir.exists())
-        {
-            tempDir.mkdirs();
-        }
+        File tempDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/TCPClient/");
+        if(!tempDir.exists()) tempDir.mkdirs();
         return File.createTempFile(part, ext, tempDir);
     }
     
@@ -173,7 +152,7 @@ public class MainActivity extends Activity {
             /* Scale down and send the image */
             try
             {
-                runJavaSocket(scaleDown(grabImage(!settings.getBoolean("PreserveImage", false)), ImageDim, true));
+                new SendAsync().execute(scaleDown(grabImage(!settings.getBoolean("PreserveImage", false)), ImageDim, true));
             }
             catch (Exception e)
             {
@@ -184,27 +163,22 @@ public class MainActivity extends Activity {
         }
     } 
     
-    protected void runJavaSocket(Bitmap bmp) {
+    public boolean runJavaSocket(Bitmap bmp) {
         /* Load Preferences */
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         final String IP = settings.getString("IP", "");
         final int ImageQuality = settings.getInt("Quality", DEFAULT_QUALITY);
         
-        /* Allow network operations on main thread. NOTE: This is a bad practice! */
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-        
         /* Check if server was killed while clicking */
         boolean ServerAlive = serverListening(IP, settings.getInt("Port", DEFAULT_PORT));
-        if (!ServerAlive) return;
+        if (!ServerAlive) return false;
         
         /* Compress Image */
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bmp.compress(Bitmap.CompressFormat.JPEG, ImageQuality, stream);
         ByteArrayInputStream rdr = new ByteArrayInputStream(stream.toByteArray());
-        
-        /* Adjust buffer size here */
-        byte[] buffer = new byte[1024];
+
+        byte[] buffer = new byte[BUFFER_SIZE];
 
         try{
             /* Open a connection */
@@ -225,10 +199,12 @@ public class MainActivity extends Activity {
 
             /* Flush the output to commit */
             output.flush();
+
+            return true;
         }
         catch (Exception e){
-            Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
-            Log.e("MYAPP", "exception", e);
+            Log.e("Client", "exception", e);
+            return false;
         }
     }
     
@@ -240,17 +216,13 @@ public class MainActivity extends Activity {
                 (float) maxImageSize / realImage.getHeight());
         int width = Math.round((float) ratio * realImage.getWidth());
         int height = Math.round((float) ratio * realImage.getHeight());
-    
-        Bitmap newBitmap = Bitmap.createScaledBitmap(realImage, width,
-                height, filter);
-        return newBitmap;
+
+        return Bitmap.createScaledBitmap(realImage, width, height, filter);
     }
     
     /* Check if IP:Port is open */
-    public boolean serverListening(String host, int port)
+    public boolean serverListening(String host, int port, boolean prompt)
     {
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
         Socket s = new Socket();
         try
         {
@@ -259,15 +231,64 @@ public class MainActivity extends Activity {
         }
         catch (Exception e)
         {
-            Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
+            if (prompt) Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
             return false;
         }
         finally
         {
-            if(s != null)
-                try {s.close();}
-                catch(Exception e){}
+            try {s.close();}
+            catch(Exception e){}
         }
     }
-    
+
+    public boolean serverListening(String host, int port){
+        return serverListening(host, port, false);
+    }
+
+    public void startClick()
+    {
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+        File photo;
+        try
+        {
+            /* Place where to store camera taken picture */
+                photo = createTemporaryFile("picture", ".jpg");
+                photo.delete();
+        }
+        catch(Exception e)
+        {
+            Toast.makeText(getApplicationContext(), "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mImageUri = Uri.fromFile(photo);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);
+        //Start Camera Intent
+        startActivityForResult(intent, CAMERA_REQUEST);
+    }
+
+    private class ConnectTry extends AsyncTask<Integer,Integer,Boolean> {
+        @Override
+        protected Boolean doInBackground(Integer... integers) {
+            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+            return (serverListening(settings.getString("IP",""), settings.getInt("Port", DEFAULT_PORT), false));
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            if (result) startClick();
+        }
+    }
+
+    private class SendAsync extends AsyncTask<Bitmap,Integer,Boolean>{
+        @Override
+        protected Boolean doInBackground(Bitmap[] bitmap) {
+            return runJavaSocket(bitmap[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            Toast.makeText(getApplicationContext(), "File sending " + (result ? "" : "un") + "successful", Toast.LENGTH_SHORT).show();
+        }
+    }
 }
