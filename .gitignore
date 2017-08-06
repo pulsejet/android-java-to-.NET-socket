@@ -1,6 +1,13 @@
 Client/bin
 Client/gen
 Client/libs
+*.iml
+Client/.gradle
+Client/.idea/workspace.xml
+Client/.idea/libraries
+Client/build
+Client/app/build
+Client/captures
 Server/TCPServer/bin
 Server/TCPServer/obj
 Server/TCPServerVB/bin

@@ -1,22 +1,31 @@
 package com.radial.client;
+
 import android.app.Activity;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.os.Bundle;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.util.Log;
-import android.os.StrictMode;
-import android.net.Uri;
-import android.provider.MediaStore;
-import android.content.Context;
-import android.database.Cursor;
-import android.os.Environment;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.widget.*;
-import java.net.*;
-import java.io.*;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.StrictMode;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 public class MainActivity extends Activity {
     /* Defaults and statics */
@@ -39,6 +48,10 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        }
 
         /* Initialize Controls */
         Button photoButton = (Button) this.findViewById(R.id.button1);

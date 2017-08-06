@@ -9,9 +9,6 @@ namespace TCPServer
             /* File name for received picture */
             const String FILE_NAME = "Received.jpg";
 
-            /* IP Address for incoming connections */
-            string IP_ADDRESS = GetLocalIPAddress();
-
             /* Port for incoming connections */
             const int PORT = 3800;
 
@@ -19,8 +16,8 @@ namespace TCPServer
             byte[] receiveBytes = new byte[1024];
 
             /* The IPEndPoint for the server. IP cannot be localhost */
-            System.Net.IPEndPoint remoteIpEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(IP_ADDRESS), PORT);
-            Console.WriteLine("Listening for connections on " + GetLocalIPAddress() + ":" + PORT.ToString());
+            System.Net.IPEndPoint remoteIpEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Any, PORT);
+            Console.WriteLine("Listening for connections on port " + PORT.ToString());
 
             /* After this amount of time has passed, any connection will be terminated
              * Keep high for high latency networks and vice versa */

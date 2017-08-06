@@ -4,9 +4,6 @@
             ' File name for received picture 
             Const FILE_NAME As String = "Received.jpg"
 
-            ' IP Address for incoming connections 
-            Dim IP_ADDRESS As String = GetLocalIPAddress()
-
             ' Port for incoming connections
             Const PORT As Integer = 3800
 
@@ -14,8 +11,8 @@
             Dim receiveBytes As Byte() = New Byte(1023) {}
 
             ' The IPEndPoint for the server. IP cannot be localhost 
-            Dim remoteIpEndPoint As New System.Net.IPEndPoint(System.Net.IPAddress.Parse(IP_ADDRESS), PORT)
-            Console.WriteLine("Listening for connections on " + GetLocalIPAddress() + ":" + CStr(PORT))
+            Dim remoteIpEndPoint As New System.Net.IPEndPoint(System.Net.IPAddress.Any, PORT)
+            Console.WriteLine("Listening for connections on port " + CStr(PORT))
 
             ' After this amount of time has passed, any connection will be terminated
             ' Keep high for high latency networks and vice versa 
