@@ -237,7 +237,7 @@ public class MainActivity extends Activity {
         finally
         {
             try {s.close();}
-            catch(Exception e){}
+            catch(Exception ignored){}
         }
     }
 
