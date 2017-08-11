@@ -1,6 +1,7 @@
 Client/bin
 Client/gen
 Client/libs
+Client/local.properties
 *.iml
 Client/.gradle
 Client/.idea/workspace.xml
