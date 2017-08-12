@@ -37,10 +37,36 @@
 				tools:inputType="phone" />
 
 			<TextView
+				android:id="@+id/port"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Port" />
+
+			<EditText
+				android:id="@+id/txtport"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:inputType="number"
+				android:singleLine="true" />
+
+			<TextView
 				android:id="@+id/maxdim"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:text="Maximum Image Dimension" />
+
+			<EditText
+				android:id="@+id/txtdim"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:inputType="number"
+				android:singleLine="true" />
+
+			<TextView
+				android:id="@+id/quality"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Quality (0 - 100)" />
 
 			<EditText
 				android:id="@+id/txtquality"
@@ -59,39 +85,13 @@
 				android:text="Preserve Original Image"
 				android:textSize="14sp" />
 
-			<EditText
-				android:id="@+id/txtport"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:inputType="number"
-				android:singleLine="true" />
-
-			<TextView
-				android:id="@+id/port"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:text="Port" />
-
-			<EditText
-				android:id="@+id/txtdim"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:inputType="number"
-				android:singleLine="true" />
-
-			<TextView
-				android:id="@+id/quality"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:text="Quality (0 - 100)" />
-
 			<Button
 				android:id="@+id/btnSave"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:text="Save"></Button>
 
-			<Button
+            <Button
 				android:id="@+id/btnRetry"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"

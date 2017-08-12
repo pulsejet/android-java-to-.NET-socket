@@ -3,6 +3,7 @@ package com.radial.client;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -39,6 +40,7 @@ public class MainActivity extends Activity {
     public static final int DEFAULT_PORT = 3800;
     private static final int CAMERA_REQUEST = 1888;
     private static final int BUFFER_SIZE = 1024;
+    public static final String FILE_STORAGE_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/TCPClient/";
 
     /* Declare Controls */
     private EditText IPEditText;
@@ -126,6 +128,18 @@ public class MainActivity extends Activity {
         
     }
 
+    public final void notifyMediaStoreScanner(final File file) {
+        try {
+            Context mContext = getApplicationContext();
+            MediaStore.Images.Media.insertImage(mContext.getContentResolver(),
+                    file.getAbsolutePath(), file.getName(), null);
+            mContext.sendBroadcast(new Intent(
+                    Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void savePreferences()
     {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
@@ -159,7 +173,7 @@ public class MainActivity extends Activity {
     /* Create temporary file to test permissions */
     public File createTemporaryFile(String part, String ext) throws Exception
     {
-        File tempDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/TCPClient/");
+        File tempDir = new File(FILE_STORAGE_DIR);
         if(!tempDir.exists()) tempDir.mkdirs();
         return File.createTempFile(part, ext, tempDir);
     }
@@ -169,16 +183,8 @@ public class MainActivity extends Activity {
     {
         this.getContentResolver().notifyChange(mImageUri, null);
         ContentResolver cr = this.getContentResolver();
-        Bitmap bitmap;
-        try
-        {
-            bitmap = android.provider.MediaStore.Images.Media.getBitmap(cr, mImageUri);
-            return bitmap;
-        }
-        catch (Exception e)
-        {
-            Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT).show();
-        }
+        try {return android.provider.MediaStore.Images.Media.getBitmap(cr, mImageUri);}
+        catch (Exception e) {Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT).show();}
         return null;
     }
 
@@ -331,19 +337,22 @@ public class MainActivity extends Activity {
 
         @Override
         protected void onPostExecute(Boolean result) {
+            File fdelete = new File(mImageUri.getPath());
             if (result) {
                 if (!sharedFile) {
                     final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-                    File fdelete = new File(mImageUri.getPath());
                     if (!settings.getBoolean("PreserveImage", false) && fdelete.exists())
                         fdelete.delete();
+                    else
+                        notifyMediaStoreScanner(fdelete);
                 }
                 retryButton.setEnabled(false);
                 imageViewMain.setImageDrawable(null);
             }
             else{
+                if (!sharedFile) notifyMediaStoreScanner(fdelete);
                 /* Display the image */
-                imageViewMain.setImageBitmap(grabImage());
+                imageViewMain.setImageBitmap(scaleDown(grabImage(), 800, false));
                 retryButton.setEnabled(true);
             }
 
