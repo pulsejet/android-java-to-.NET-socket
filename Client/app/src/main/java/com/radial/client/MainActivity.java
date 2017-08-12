@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.Toast;
 
@@ -46,6 +47,7 @@ public class MainActivity extends Activity {
     private EditText PortEditText;
     private Switch PreserveCheckbox;
     private Button retryButton;
+    private ImageView imageViewMain;
 
     private Uri mImageUri;
     private static Boolean sharedFile = false;
@@ -72,6 +74,7 @@ public class MainActivity extends Activity {
         DimensionEditText = (EditText)findViewById(R.id.txtdim);
         PortEditText = (EditText)findViewById(R.id.txtport);
         PreserveCheckbox = (Switch)findViewById(R.id.checkbox_preserve);
+        imageViewMain = (ImageView)findViewById(R.id.imageView);
 
         /* Load Preferences */
         final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);     
@@ -336,8 +339,13 @@ public class MainActivity extends Activity {
                         fdelete.delete();
                 }
                 retryButton.setEnabled(false);
+                imageViewMain.setImageDrawable(null);
             }
-            else retryButton.setEnabled(true);
+            else{
+                /* Display the image */
+                imageViewMain.setImageBitmap(grabImage());
+                retryButton.setEnabled(true);
+            }
 
             Toast.makeText(getApplicationContext(), "File sending " + (result ? "" : "un") + "successful", Toast.LENGTH_SHORT).show();
         }

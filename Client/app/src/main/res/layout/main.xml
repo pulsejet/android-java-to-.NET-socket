@@ -6,65 +6,112 @@
     android:layout_height="fill_parent"
 	android:weightSum="1">
 
-	<Button
-		android:id="@+id/btnPhoto"
+	<ScrollView
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:text="Photo"></Button>
-	<TextView android:id="@+id/ip_textview" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="IP Address" />
+		android:layout_height="match_parent"
+		android:visibility="visible">
 
-	<EditText
-		android:id="@+id/txtip"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:inputType="text|textNoSuggestions"
-		android:singleLine="true"
-		tools:inputType="phone" />
-	<TextView android:id="@+id/port" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="Port" />
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="vertical">
 
-	<EditText
-		android:id="@+id/txtport"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:inputType="number"
-		android:singleLine="true" />
-	<TextView android:id="@+id/maxdim" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="Maximum Image Dimension" />
+			<Button
+				android:id="@+id/btnPhoto"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Photo"></Button>
 
-	<EditText
-		android:id="@+id/txtdim"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:inputType="number"
-		android:singleLine="true" />
-	<TextView android:id="@+id/quality" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="Quality (0 - 100)" />
+			<TextView
+				android:id="@+id/ip_textview"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="IP Address" />
 
-	<EditText
-		android:id="@+id/txtquality"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:inputType="number"
-		android:singleLine="true" />
+			<EditText
+				android:id="@+id/txtip"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:inputType="text|textNoSuggestions"
+				android:singleLine="true"
+				tools:inputType="phone" />
 
-	<Switch
-		android:id="@+id/checkbox_preserve"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:checked="false"
-		android:splitTrack="false"
-		android:text="Preserve Original Image"
-		android:textSize="14sp"
-		android:layout_weight="0.10" />
+			<TextView
+				android:id="@+id/maxdim"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Maximum Image Dimension" />
 
-	<Button
-		android:id="@+id/btnSave"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:text="Save"></Button>
+			<EditText
+				android:id="@+id/txtquality"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:inputType="number"
+				android:singleLine="true" />
 
-	<Button
-		android:id="@+id/btnRetry"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:text="Retry" />
+			<Switch
+				android:id="@+id/checkbox_preserve"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_weight="0.10"
+				android:checked="false"
+				android:splitTrack="false"
+				android:text="Preserve Original Image"
+				android:textSize="14sp" />
+
+			<EditText
+				android:id="@+id/txtport"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:inputType="number"
+				android:singleLine="true" />
+
+			<TextView
+				android:id="@+id/port"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Port" />
+
+			<EditText
+				android:id="@+id/txtdim"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:inputType="number"
+				android:singleLine="true" />
+
+			<TextView
+				android:id="@+id/quality"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Quality (0 - 100)" />
+
+			<Button
+				android:id="@+id/btnSave"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Save"></Button>
+
+			<Button
+				android:id="@+id/btnRetry"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Retry" />
+
+			<Space
+				android:layout_width="match_parent"
+				android:layout_height="10pt" />
+
+			<ImageView
+				android:id="@+id/imageView"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:scaleType="fitCenter" />
+
+			<Space
+				android:layout_width="match_parent"
+				android:layout_height="10pt" />
+
+		</LinearLayout>
+	</ScrollView>
 
 </LinearLayout>
