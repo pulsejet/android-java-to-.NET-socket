@@ -7,7 +7,7 @@
 	android:weightSum="1">
 
 	<Button
-		android:id="@+id/button1"
+		android:id="@+id/btnPhoto"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:text="Photo"></Button>
@@ -55,10 +55,16 @@
 		android:textSize="14sp"
 		android:layout_weight="0.10" />
 
-    <Button
-		android:id="@+id/button2"
+	<Button
+		android:id="@+id/btnSave"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:text="Save"></Button>
+
+	<Button
+		android:id="@+id/btnRetry"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Retry" />
 
 </LinearLayout>

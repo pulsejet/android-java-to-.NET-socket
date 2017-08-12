@@ -1,9 +1,11 @@
 package com.radial.client;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -12,6 +14,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v13.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -42,8 +45,10 @@ public class MainActivity extends Activity {
     private EditText DimensionEditText;
     private EditText PortEditText;
     private Switch PreserveCheckbox;
-    
+    private Button retryButton;
+
     private Uri mImageUri;
+    private static Boolean sharedFile = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -51,12 +56,17 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
 
         if (Build.VERSION.SDK_INT >= 23) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+            }
         }
 
         /* Initialize Controls */
-        Button photoButton = (Button) this.findViewById(R.id.button1);
-        Button saveButton = (Button) this.findViewById(R.id.button2);
+        Button photoButton = (Button) this.findViewById(R.id.btnPhoto);
+        Button saveButton = (Button) this.findViewById(R.id.btnSave);
+        retryButton = (Button) this.findViewById(R.id.btnRetry);
+        retryButton.setEnabled(false);
+
         IPEditText = (EditText)findViewById(R.id.txtip);
         QualityEditText = (EditText)findViewById(R.id.txtquality);
         DimensionEditText = (EditText)findViewById(R.id.txtdim);
@@ -71,8 +81,6 @@ public class MainActivity extends Activity {
         PortEditText.setText(Integer.toString(settings.getInt("Port", DEFAULT_PORT)));
         PreserveCheckbox.setChecked(settings.getBoolean("PreserveImage", false));
 
-        new ConnectTry().execute();
-
         photoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -82,37 +90,69 @@ public class MainActivity extends Activity {
 
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-                SharedPreferences.Editor editor = settings.edit();
-                try{
-                    /* Check for erroneous values */
-                    int Qual=Integer.parseInt(QualityEditText.getText().toString());
-                    int Dim=Integer.parseInt(DimensionEditText.getText().toString());
-                    int Port=Integer.parseInt(PortEditText.getText().toString());
-                    if (Qual > 100 || Qual < 0) throw new Exception("Invalid Quality Value");
-                    if (Dim < 0) throw new Exception("Invalid Dimension Value");
-                    if (Port <= 0 || Port >= 65534) throw new Exception("Invalid Port");
-                    
-                    /* Save Preferences */
-                    editor.putInt("Quality", Qual);
-                    editor.putInt("Dimension", Dim);
-                    editor.putInt("Port", Port);
-                    editor.putString("IP", IPEditText.getText().toString());
-                    editor.putBoolean("PreserveImage", PreserveCheckbox.isChecked());
-                }
-                catch(Exception e){ 
-                    Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                /* Commit the edits! */
-                editor.commit();
-                Toast.makeText(getApplicationContext(), "Preferences Saved", Toast.LENGTH_SHORT).show();
+            public void onClick(View v) { savePreferences();
+
             }
         });
+
+        retryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final SharedPreferences newsettings = getSharedPreferences(PREFS_NAME, 0);
+                int ImageDim = newsettings.getInt("Dimension", DEFAULT_DIM);
+                new SendAsync().execute(scaleDown(grabImage(), ImageDim, true));
+            }
+        });
+
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if (type.startsWith("image/")) {
+                mImageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                if (mImageUri != null) {
+                    sharedFile = true;
+                    final SharedPreferences newsettings = getSharedPreferences(PREFS_NAME, 0);
+                    int ImageDim = newsettings.getInt("Dimension", DEFAULT_DIM);
+                    new SendAsync().execute(scaleDown(grabImage(), ImageDim, true));
+                }
+            }
+        }
+        else new ConnectTry().execute();
         
     }
-    
+
+    private void savePreferences()
+    {
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        try{
+                    /* Check for erroneous values */
+            int Qual=Integer.parseInt(QualityEditText.getText().toString());
+            int Dim=Integer.parseInt(DimensionEditText.getText().toString());
+            int Port=Integer.parseInt(PortEditText.getText().toString());
+            if (Qual > 100 || Qual < 0) throw new Exception("Invalid Quality Value");
+            if (Dim < 0) throw new Exception("Invalid Dimension Value");
+            if (Port <= 0 || Port >= 65534) throw new Exception("Invalid Port");
+
+                    /* Save Preferences */
+            editor.putInt("Quality", Qual);
+            editor.putInt("Dimension", Dim);
+            editor.putInt("Port", Port);
+            editor.putString("IP", IPEditText.getText().toString());
+            editor.putBoolean("PreserveImage", PreserveCheckbox.isChecked());
+        }
+        catch(Exception e){
+            Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
+            return;
+        }
+                /* Commit the edits! */
+        editor.commit();
+        Toast.makeText(getApplicationContext(), "Preferences Saved", Toast.LENGTH_SHORT).show();
+    }
+
+
     /* Create temporary file to test permissions */
     public File createTemporaryFile(String part, String ext) throws Exception
     {
@@ -122,7 +162,7 @@ public class MainActivity extends Activity {
     }
     
     /* Get the bitmap of the image */
-    public Bitmap grabImage(boolean delete)
+    public Bitmap grabImage()
     {
         this.getContentResolver().notifyChange(mImageUri, null);
         ContentResolver cr = this.getContentResolver();
@@ -130,8 +170,6 @@ public class MainActivity extends Activity {
         try
         {
             bitmap = android.provider.MediaStore.Images.Media.getBitmap(cr, mImageUri);
-            File fdelete = new File(mImageUri.getPath()); 
-            if (delete && fdelete.exists()) fdelete.delete();
             return bitmap;
         }
         catch (Exception e)
@@ -152,7 +190,7 @@ public class MainActivity extends Activity {
             /* Scale down and send the image */
             try
             {
-                new SendAsync().execute(scaleDown(grabImage(!settings.getBoolean("PreserveImage", false)), ImageDim, true));
+                new SendAsync().execute(scaleDown(grabImage(), ImageDim, true));
             }
             catch (Exception e)
             {
@@ -261,6 +299,7 @@ public class MainActivity extends Activity {
             Toast.makeText(getApplicationContext(), "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT).show();
             return;
         }
+        sharedFile = false;
         mImageUri = Uri.fromFile(photo);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);
         //Start Camera Intent
@@ -277,6 +316,7 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(Boolean result) {
             if (result) startClick();
+            else Toast.makeText(getApplicationContext(), "Connection Failed",Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -288,6 +328,17 @@ public class MainActivity extends Activity {
 
         @Override
         protected void onPostExecute(Boolean result) {
+            if (result) {
+                if (!sharedFile) {
+                    final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+                    File fdelete = new File(mImageUri.getPath());
+                    if (!settings.getBoolean("PreserveImage", false) && fdelete.exists())
+                        fdelete.delete();
+                }
+                retryButton.setEnabled(false);
+            }
+            else retryButton.setEnabled(true);
+
             Toast.makeText(getApplicationContext(), "File sending " + (result ? "" : "un") + "successful", Toast.LENGTH_SHORT).show();
         }
     }
