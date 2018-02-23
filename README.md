@@ -3,6 +3,8 @@
 Simple android client in Java that transfers a single file over a wireless network to an IP:Port over a socket to the server coded in C# or VisualBasic.NET.
 The client currently clicks a photo using the camera intent.
 
+[![GitHub license](https://img.shields.io/github/license/radialapps/android-java-to-.NET-socket.svg)](https://github.com/radialapps/android-java-to-.NET-socket/blob/master/LICENSE)
+
 ## Protocol
 
 Communication is only from client to server. Before sending the image, the clients sends the word "HEADER" (without quotes) followed by a newline, then the exact size of the file to be sent in bytes followed by another newline and then the contents of the file. Following this, the connection is closed.
