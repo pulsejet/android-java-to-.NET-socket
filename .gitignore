@@ -4,9 +4,10 @@ Client/libs
 local.properties
 *.iml
 .gradle
-.idea
+.idea/
 Client/build
 Client/app/build
+Client/app/release
 Client/captures
 
 Server/TCPServer/bin
