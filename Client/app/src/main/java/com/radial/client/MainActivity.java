@@ -1,21 +1,17 @@
 package com.radial.client;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import android.util.Log;
@@ -63,22 +59,18 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-        }
-
         /* Initialize Controls */
-        Button photoButton = (Button) this.findViewById(R.id.btnPhoto);
-        Button saveButton = (Button) this.findViewById(R.id.btnSave);
-        retryButton = (Button) this.findViewById(R.id.btnRetry);
+        Button photoButton = this.findViewById(R.id.btnPhoto);
+        Button saveButton = this.findViewById(R.id.btnSave);
+        retryButton = this.findViewById(R.id.btnRetry);
         retryButton.setEnabled(false);
 
-        IPEditText = (EditText)findViewById(R.id.txtip);
-        QualityEditText = (EditText)findViewById(R.id.txtquality);
-        DimensionEditText = (EditText)findViewById(R.id.txtdim);
-        PortEditText = (EditText)findViewById(R.id.txtport);
-        PreserveCheckbox = (Switch)findViewById(R.id.checkbox_preserve);
-        imageViewMain = (ImageView)findViewById(R.id.imageView);
+        IPEditText = findViewById(R.id.txtip);
+        QualityEditText = findViewById(R.id.txtquality);
+        DimensionEditText = findViewById(R.id.txtdim);
+        PortEditText = findViewById(R.id.txtport);
+        PreserveCheckbox = findViewById(R.id.checkbox_preserve);
+        imageViewMain = findViewById(R.id.imageView);
 
         /* Load Preferences */
         final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);     
@@ -183,11 +175,16 @@ public class MainActivity extends Activity {
     /* Get the bitmap of the image */
     public Bitmap grabImage()
     {
-        this.getContentResolver().notifyChange(mImageUri, null);
-        ContentResolver cr = this.getContentResolver();
-        try {return android.provider.MediaStore.Images.Media.getBitmap(cr, mImageUri);}
-        catch (Exception e) {Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT).show();}
-        return null;
+        try {
+            this.getContentResolver().notifyChange(mImageUri, null);
+            ContentResolver cr = this.getContentResolver();
+            ImageDecoder.Source source = ImageDecoder.createSource(cr, mImageUri);
+            return ImageDecoder.decodeBitmap(source);
+        }
+        catch (Exception e) {
+            Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT).show();
+            return null;
+        }
     }
 
     /* After camera activity closes */
@@ -227,13 +224,12 @@ public class MainActivity extends Activity {
         bmp.compress(Bitmap.CompressFormat.JPEG, ImageQuality, stream);
         ByteArrayInputStream rdr = new ByteArrayInputStream(stream.toByteArray());
 
-        try{
-            /* Open a connection */
-            Socket socket = new Socket(InetAddress.getByName(IP), settings.getInt("Port", DEFAULT_PORT));
-    
+        /* Open a connection */
+        try (Socket socket = new Socket(InetAddress.getByName(IP), settings.getInt("Port", DEFAULT_PORT))) {
             /* Write everything */
             OutputStream output = socket.getOutputStream();
 
+            // Create  buffer for output
             byte[] buffer = new byte[BUFFER_SIZE];
 
             // Zero the array for safety
@@ -276,21 +272,13 @@ public class MainActivity extends Activity {
     /* Check if IP:Port is open */
     public boolean serverListening(String host, int port, boolean prompt)
     {
-        Socket s = new Socket();
-        try
-        {
+        try (Socket s = new Socket()) {
             s.connect(new InetSocketAddress(host, port), 1000);
             return true;
-        }
-        catch (Exception e)
-        {
-            if (prompt) Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            if (prompt)
+                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
             return false;
-        }
-        finally
-        {
-            try {s.close();}
-            catch(Exception ignored){}
         }
     }
 
