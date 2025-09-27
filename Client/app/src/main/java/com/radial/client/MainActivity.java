@@ -33,6 +33,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class MainActivity extends Activity {
     /* Defaults and statics */
@@ -232,11 +233,18 @@ public class MainActivity extends Activity {
     
             /* Write everything */
             OutputStream output = socket.getOutputStream();
-            
-            String string = "HEADER\n" + stream.size() + "\n";
-            output.write(string.getBytes());
 
             byte[] buffer = new byte[BUFFER_SIZE];
+
+            // Zero the array for safety
+            Arrays.fill(buffer, (byte) 0);
+
+            String string = "HEADER\n" + Integer.toString(stream.size()) + "\n";
+            System.arraycopy(string.getBytes("US-ASCII"), 0, buffer, 0, string.length());
+
+            // Yes, it is totally broken ...
+            output.write(buffer);
+
             int count;
             while ((count = rdr.read(buffer,0,buffer.length)) > 0) {
                 output.write(buffer, 0, count);
