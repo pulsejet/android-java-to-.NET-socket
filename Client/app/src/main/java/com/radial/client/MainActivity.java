@@ -14,8 +14,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v13.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -34,6 +36,7 @@ import java.net.Socket;
 
 public class MainActivity extends Activity {
     /* Defaults and statics */
+    public static final String TAG = "RA-CLIENT";
     public static final String PREFS_NAME = "TCPClientConf";
     public static final int DEFAULT_QUALITY = 80;
     public static final int DEFAULT_DIM = 512;
@@ -59,10 +62,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-            }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         }
 
         /* Initialize Controls */
@@ -164,7 +165,8 @@ public class MainActivity extends Activity {
             Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
             return;
         }
-                /* Commit the edits! */
+
+        /* Commit the edits! */
         editor.commit();
         Toast.makeText(getApplicationContext(), "Preferences Saved", Toast.LENGTH_SHORT).show();
     }
@@ -173,8 +175,7 @@ public class MainActivity extends Activity {
     /* Create temporary file to test permissions */
     public File createTemporaryFile(String part, String ext) throws Exception
     {
-        File tempDir = new File(FILE_STORAGE_DIR);
-        if(!tempDir.exists()) tempDir.mkdirs();
+        File tempDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         return File.createTempFile(part, ext, tempDir);
     }
     
@@ -189,9 +190,9 @@ public class MainActivity extends Activity {
     }
 
     /* After camera activity closes */
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {  
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
-            
+
             /* Load Preferences */
             SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
             final int ImageDim = settings.getInt("Dimension", DEFAULT_DIM);
@@ -225,8 +226,6 @@ public class MainActivity extends Activity {
         bmp.compress(Bitmap.CompressFormat.JPEG, ImageQuality, stream);
         ByteArrayInputStream rdr = new ByteArrayInputStream(stream.toByteArray());
 
-        byte[] buffer = new byte[BUFFER_SIZE];
-
         try{
             /* Open a connection */
             Socket socket = new Socket(InetAddress.getByName(IP), settings.getInt("Port", DEFAULT_PORT));
@@ -234,11 +233,10 @@ public class MainActivity extends Activity {
             /* Write everything */
             OutputStream output = socket.getOutputStream();
             
-            String string = "HEADER\n" + Integer.toString(stream.size()) + "\n";
-            System.arraycopy(string.getBytes("US-ASCII"), 0, buffer, 0, string.length());
-            
-            output.write(buffer);
-            
+            String string = "HEADER\n" + stream.size() + "\n";
+            output.write(string.getBytes());
+
+            byte[] buffer = new byte[BUFFER_SIZE];
             int count;
             while ((count = rdr.read(buffer,0,buffer.length)) > 0) {
                 output.write(buffer, 0, count);
@@ -250,7 +248,7 @@ public class MainActivity extends Activity {
             return true;
         }
         catch (Exception e){
-            Log.e("Client", "exception", e);
+            Log.e(TAG, "exception", e);
             return false;
         }
     }
@@ -294,25 +292,24 @@ public class MainActivity extends Activity {
 
     public void startClick()
     {
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
-        File photo;
         try
         {
+            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
             /* Place where to store camera taken picture */
-                photo = createTemporaryFile("picture", ".jpg");
-                photo.delete();
+            File photoFile = createTemporaryFile("radialapps-client", ".jpg");
+            sharedFile = false;
+            mImageUri = FileProvider.getUriForFile(this, "com.radialapps.client.fileprovider", photoFile);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);
+            startActivityForResult(intent, CAMERA_REQUEST);
         }
         catch(Exception e)
         {
-            Toast.makeText(getApplicationContext(), "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT).show();
-            return;
+            Log.e(TAG, e.getMessage());
+            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
         }
-        sharedFile = false;
-        mImageUri = Uri.fromFile(photo);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);
-        //Start Camera Intent
-        startActivityForResult(intent, CAMERA_REQUEST);
+
     }
 
     private class ConnectTry extends AsyncTask<Integer,Integer,Boolean> {
